@@ -25,6 +25,11 @@ a = (a & (c == 2)) | (c == 3)
 
 ![screenshot of life in cyan](screenshot.png)
 
+### TODO
+
+* [x] Add multiple colours for newborn, stable, and recently dead cells.
+* [ ] Try fitting many more cells on the screen by using Braille glyphs.
+
 ---
 
 Made with :purple_heart: by Matt
