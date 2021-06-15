@@ -14,9 +14,8 @@ Configuration atop the script.
 #### What have convolutions got to do with Life?
 
 Convolutions are magical! The 2d convolution of the state array with the
-simple filter `k = [[1 1 1] [1 0 1] [1 1 1]]` counts, for all cells, the
-number of adjacent 'on' cells. This is exactly the kind of count we need
-when computing life!
+simple filter `[[1 1 1] [1 0 1] [1 1 1]]` counts, for all cells, the
+number of adjacent 'on' cells. This is exactly the kind of count we need!
 
 The state update rule for Life is then succinctly implemented as follows:
 ```
