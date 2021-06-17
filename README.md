@@ -23,12 +23,12 @@ c = convolve2d(a, [[1,1,1],[1,0,1],[1,1,1]], mode='same', boundary='wrap')
 a = (a & (c == 2)) | (c == 3)
 ```
 
-![screenshot of life in cyan](screenshot.png)
+![Animation of life in Magenta](animation.gif)
 
 ### TODO
 
 * [x] Add multiple colours for newborn, stable, and recently dead cells.
-* [ ] Try fitting many more cells on the screen by using Braille glyphs.
+* [x] Try fitting many more cells on the screen by using Braille glyphs.
 
 ---
 
