@@ -10,16 +10,10 @@ import scipy.signal as signal
 # Display Configuration
 # 
 
-CELL_CHAR  = b"O"
-
 CELL_COLOR = curses.COLOR_MAGENTA
-BORN_COLOR = curses.COLOR_WHITE
-DIED_COLOR = curses.COLOR_BLACK
 
 FRAMES_SEC = 12
 SLEEP_TIME = 1 / FRAMES_SEC
-
-# TODO: animated characters?
 
 # # #
 # Conway's Game of Life
@@ -42,57 +36,74 @@ class Game:
             (self.h, self.w),
             p=[0.75, 0.25],
         )
-        self.b = np.zeros_like(self.a)
     def update(self):
-        self.b = self.a
         counts = signal.convolve2d(
-            self.b,
+            self.a,
             KERNEL,
             mode='same',
             boundary='wrap',
         )
-        self.a = (self.b & (counts == 2)) | (counts == 3)
+        self.a = (self.a & (counts == 2)) | (counts == 3)
     def status(self):
         return self.a
-    def status_color(self):
-        return self.b + 2*self.a
-
 
 def main(stdscr):
     # curses setup
     curses.curs_set(False)
     stdscr.nodelay(True)
     # prepare colors
-    attr_map = prepare_colors()
+    stdscr.bkgd(' ', prepare_colors())
     # start life
     game = Game(
-        height=curses.LINES,
-        width=curses.COLS,
+        height=curses.LINES * 4,
+        width=curses.COLS * 2,
     )
     # enter main loop
     while stdscr.getch() < 0:
         # paint screen
         stdscr.clear()
-        a = game.status_color()
-        for i, j, in np.transpose(np.where(a > 0)):
-            stdscr.insch(i, j, CELL_CHAR, attr_map[a[i, j]])
+        a = game.status()
+        b = braille_cells(a)
+        for i, j, in np.transpose(np.where(b > 0)):
+            stdscr.insstr(i, j, chr(0x2800+b[i, j]))
         stdscr.refresh()
         # update life
         game.update()
         time.sleep(SLEEP_TIME)
 
 
+def braille_cells(a):
+    """
+    Turns a HxW array of booleans into a (H//4)x(W//2) array of braille
+    binary codes (suitable for specifying unicode codepoints, just add
+    0x2800).
+    
+    braille symbol:                 binary digit representation:
+                    0-o o-1
+                    2-o o-3   ---->     0 b  0 0  0 0 0  0 0 0
+                    4-o o-5                  | |  | | |  | | |
+                    6-o o-7                  7 6  5 3 1  4 2 0
+
+    """
+    H, W = a.shape
+    h, w = (H // 4, W // 2)
+    c = (   a
+            .reshape(h, 4, w, 2)     # split rows into 4s and cols into 2s
+            .transpose([1, 3, 0, 2]) # put the 4x2s in the first two dims
+            .reshape(8, h, w)        # collapse them into one dimension
+        )
+    # pack the numbers into an array of bytes
+    b = ( c[0]      | c[1] << 3 
+        | c[2] << 1 | c[3] << 4 
+        | c[4] << 2 | c[5] << 5 
+        | c[6] << 6 | c[7] << 7
+        )
+    return b
+
 def prepare_colors():
     curses.use_default_colors()
     curses.init_pair(1, CELL_COLOR, -1)
-    curses.init_pair(2, BORN_COLOR, -1)
-    curses.init_pair(3, DIED_COLOR, -1)
-    return (
-        0,
-        curses.color_pair(3) | curses.A_BOLD,
-        curses.color_pair(2) | curses.A_BOLD,
-        curses.color_pair(1) | curses.A_BOLD,
-    )
+    return curses.color_pair(1) | curses.A_BOLD
 
 
 if __name__ == "__main__":
